@@ -1,0 +1,96 @@
+package org.luoxi.ibd.analyst;
+
+import java.util.List;
+
+import org.luoxi.ibd.analyzer.Analyzer;
+import org.luoxi.ibd.config.ConfigFactory;
+import org.luoxi.ibd.context.ContextImpl;
+import org.luoxi.ibd.enrich.Enricher;
+import org.luoxi.ibd.filter.Filter;
+import org.luoxi.ibd.model.InputSpreadsheet;
+import org.luoxi.ibd.model.OutputSpreadsheet;
+import org.luoxi.ibd.printer.SpreadsheetPrinter;
+import org.luoxi.ibd.scanner.SpreadsheetScanner;
+
+import com.google.common.collect.Lists;
+
+/**
+ * Fundamental analyst.
+ * It composes {@link SpreadsheetScanner} {@link Analyzer} and {@link SpreadsheetPrinter} to do the real work.
+ * And organize them is a certain way.
+ *
+ * @author luoxi
+ *
+ */
+public abstract class Analyst implements IAnalyst {
+
+	protected SpreadsheetScanner scanner;
+	protected Analyzer analyzer;
+	protected List<Filter> filters;
+	protected List<Enricher> enrichers;
+	protected SpreadsheetPrinter printer;
+
+	public Analyst(SpreadsheetScanner scanner, Analyzer analyzer,  List<Filter> filters, List<Enricher> enrichers, SpreadsheetPrinter printer) {
+		super();
+		this.scanner = scanner;
+		this.analyzer = analyzer;
+		this.filters = filters;
+		this.enrichers = enrichers;
+		this.printer = printer;
+	}
+
+	protected List<InputSpreadsheet> extract(List<String> filePaths) {
+		List<InputSpreadsheet> inputSpreadsheets = Lists.newArrayList();
+		for (String filePath : filePaths) {
+			inputSpreadsheets.add(scanner.extract(filePath));
+		}
+		return inputSpreadsheets;
+	}
+
+	protected OutputSpreadsheet analyze(List<InputSpreadsheet> stockLists) {
+		return analyzer.analyze(stockLists);
+	}
+
+	protected OutputSpreadsheet filtrate(OutputSpreadsheet outputSpreadsheet) {
+		OutputSpreadsheet output = outputSpreadsheet;
+		for (Filter filter : filters) {
+			output = filter.filtrate(output);
+		}
+		return output;
+	}
+
+	protected OutputSpreadsheet enrich(OutputSpreadsheet outputSpreadsheet) {
+		OutputSpreadsheet output = outputSpreadsheet;
+		for (Enricher enricher : enrichers) {
+			output = enricher.enrich(output);
+		}
+		return output;
+	}
+
+	protected void generateResultSpreadsheet(OutputSpreadsheet outputSpreadsheet) {
+		printer.generateResultSpreadsheet(outputSpreadsheet);
+	}
+
+	/**
+	 * 6 steps here :
+	 *
+	 * 1. Get the input spreadsheets paths
+	 * 2. Extract the data
+	 * 3. Analyze the data
+	 * 4. Filter the analyze result
+	 * 5. Enrich the analyze result
+	 * 6. Generate the result spreadsheets
+	 */
+	public void brainstorm() {
+		// Set up context first
+		ConfigFactory.get().getContextProvider().establishOrUpdateContext(new ContextImpl());
+
+		// Do the real work
+		generateResultSpreadsheet(enrich(filtrate(analyze(extract(getInputSpreadsheetPaths())))));
+
+		// Clean up the context
+		ConfigFactory.get().getContextProvider().releaseContext();
+	}
+
+	protected abstract List<String> getInputSpreadsheetPaths();
+}
