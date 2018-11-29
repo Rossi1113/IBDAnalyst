@@ -1,7 +1,6 @@
 # IBDAnalyst 
 A tool help you analyze the recommended stock lists from <a href="www.investors.com">Investor Business Daily</a>.
 
-<br/>
 <h3>Major Process</h3> 
 Scan -> Analyze -> Filter -> Enrich -> Print
 <br/>
