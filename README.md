@@ -1,8 +1,10 @@
-A tool help you analyze the recommended stock lists from Investor Business Daily.
+# IBDAnalyst 
+A tool help you analyze the recommended stock lists from <a href="www.investors.com">Investor Business Daily</a>.
 
-Major Process : 
+<br/>
+<h3>Major Process</h3> 
 Scan -> Analyze -> Filter -> Enrich -> Print
-
+<br/>
 Scan    - extract the data from spreadsheet <br/>
 Analyze - analyze the data based on different strategy <br/>
 Filter  - filter the result <br/>
